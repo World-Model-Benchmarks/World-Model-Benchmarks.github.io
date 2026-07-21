@@ -1,0 +1,72 @@
+name: Deploy organization website
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website source
+        uses: actions/checkout@v4
+        with:
+          repository: World-Model-Benchmarks/World-Model-Benchmarks
+          ref: main
+          path: source
+
+      - name: Prepare organization site
+        shell: bash
+        run: |
+          rm -rf site
+          cp -a source/docs site
+          touch site/.nojekyll
+
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path("site")
+          replacements = {
+              "https://axbhb.github.io/world-model-evaluation-survey/": "https://world-model-benchmarks.github.io/",
+              "https://world-model-benchmarks.github.io/World-Model-Benchmarks/": "https://world-model-benchmarks.github.io/",
+              "https://github.com/axbhb/world-model-evaluation-survey": "https://github.com/World-Model-Benchmarks/World-Model-Benchmarks",
+          }
+
+          text_suffixes = {".html", ".css", ".js", ".json", ".xml", ".svg", ".txt", ".md"}
+          for path in root.rglob("*"):
+              if not path.is_file() or path.suffix.lower() not in text_suffixes:
+                  continue
+              text = path.read_text(encoding="utf-8")
+              updated = text
+              for old, new in replacements.items():
+                  updated = updated.replace(old, new)
+              if updated != text:
+                  path.write_text(updated, encoding="utf-8")
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
