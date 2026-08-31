@@ -6,6 +6,10 @@ https://world-model-benchmarks.github.io/
 
 The website source is maintained in [`World-Model-Benchmarks/World-Model-Benchmarks`](https://github.com/World-Model-Benchmarks/World-Model-Benchmarks), under the `docs/` directory. The deployment workflow in this repository checks out that source, rewrites site-level URLs for the organization root domain, and deploys the resulting static site through GitHub Pages.
 
+## Survey authors
+
+Zheng Zhang, Zhixiang Guo, Yuan Si, Siyuan Liang, Shunyu Liu, Weibo Gao, Song Wang, Leszek Rutkowski, Giuseppe Valenzise, Ming-Hsuan Yang, Lin William Cong, M. Jamal Deen, Sally Cripps, and Dacheng Tao.
+
 ## Updating the website
 
 Edit the website source in the main survey repository:
