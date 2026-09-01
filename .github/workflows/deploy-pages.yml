@@ -9,7 +9,8 @@ on:
       - "README.md"
   workflow_dispatch:
   schedule:
-    - cron: "17 * * * *"
+    # Once daily at 00:17 UTC (08:17 Singapore time).
+    - cron: "17 0 * * *"
 
 permissions:
   contents: read
