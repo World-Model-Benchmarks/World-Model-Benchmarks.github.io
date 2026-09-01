@@ -1,9 +1,12 @@
-# Source snapshot: 106 benchmarks / 66 cross-category benchmarks
+# Mirror the canonical project website at the organization-root URL.
 name: Deploy organization website
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - ".github/workflows/deploy-pages.yml"
+      - "README.md"
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
@@ -14,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: organization-pages
   cancel-in-progress: true
 
 jobs:
@@ -24,27 +27,58 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out website source
+      - name: Check out canonical website source
         uses: actions/checkout@v4
         with:
           repository: World-Model-Benchmarks/World-Model-Benchmarks
           ref: main
           path: source
+          fetch-depth: 1
 
-      - name: Prepare organization site
+      - name: Prepare organization-root mirror
         shell: bash
         run: |
+          set -euo pipefail
           rm -rf site
           cp -a source/docs site
           touch site/.nojekyll
 
+          SOURCE_SHA=$(git -C source rev-parse HEAD)
+          printf 'Canonical source: World-Model-Benchmarks/World-Model-Benchmarks@%s\n' "$SOURCE_SHA" > site/source-snapshot.txt
+
           python - <<'PY'
+          from __future__ import annotations
+
+          import json
           from pathlib import Path
 
           root = Path("site")
+          manifest_path = root / "assets" / "benchmarks.json"
+          metadata_path = root / "assets" / "metadata.json"
+
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+          records = manifest.get("records", {})
+
+          assert manifest.get("total") == len(records), "Manifest total does not match its records"
+          assert metadata.get("total") == manifest.get("total"), "Metadata and manifest totals differ"
+          assert metadata.get("crossCategory") == manifest.get("crossCategory"), "Cross-category totals differ"
+          if manifest.get("classificationFingerprint") and metadata.get("classificationFingerprint"):
+              assert manifest["classificationFingerprint"] == metadata["classificationFingerprint"], "Classification fingerprints differ"
+          if manifest.get("recordFingerprint") and metadata.get("recordFingerprint"):
+              assert manifest["recordFingerprint"] == metadata["recordFingerprint"], "Record fingerprints differ"
+
+          shard_items = []
+          for index in range(1, 5):
+              shard_path = root / "assets" / f"benchmarks-{index}.json"
+              shard_items.extend(json.loads(shard_path.read_text(encoding="utf-8")))
+          assert len(shard_items) == manifest["total"], "Website shards do not match the manifest total"
+          assert {item["shortName"] for item in shard_items} == set(records), "Website shards and manifest contain different benchmarks"
+
           replacements = {
               "https://axbhb.github.io/world-model-evaluation-survey/": "https://world-model-benchmarks.github.io/",
               "https://world-model-benchmarks.github.io/World-Model-Benchmarks/": "https://world-model-benchmarks.github.io/",
+              "https://world-model-benchmarks.github.io/World-Model-Benchmarks": "https://world-model-benchmarks.github.io",
               "https://github.com/axbhb/world-model-evaluation-survey": "https://github.com/World-Model-Benchmarks/World-Model-Benchmarks",
           }
 
@@ -58,6 +92,10 @@ jobs:
                   updated = updated.replace(old, new)
               if updated != text:
                   path.write_text(updated, encoding="utf-8")
+
+          index = (root / "index.html").read_text(encoding="utf-8")
+          assert '<link rel="canonical" href="https://world-model-benchmarks.github.io/">' in index
+          assert '<meta property="og:url" content="https://world-model-benchmarks.github.io/">' in index
           PY
 
       - name: Configure GitHub Pages
