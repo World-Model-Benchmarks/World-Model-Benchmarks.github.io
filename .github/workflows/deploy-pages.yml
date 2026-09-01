@@ -1,4 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@faec412fa5b5d7c345da5fd1db49f9862671f101
 name: Deploy organization website
 
 on:
