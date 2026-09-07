@@ -1,5 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
-# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@faec412fa5b5d7c345da5fd1db49f9862671f101
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@bef99d57f8015e124f3aafc670f3833726175e56
 name: Deploy organization website
 
 on:
@@ -36,6 +36,12 @@ jobs:
           ref: main
           path: source
           fetch-depth: 1
+
+      - name: Validate website domain grouping
+        run: |
+          node --check source/docs/assets/app-v3-core.js
+          node --check source/docs/assets/app-v3.js
+          node source/scripts/test_website_domains.cjs
 
       - name: Prepare organization-root mirror
         shell: bash
