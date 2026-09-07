@@ -1,5 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
-# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@c5e6dda308a578944e1081543f52c598ed107a99
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@27a900061cbf8d3d49b84270e76dcd1fe9ef681c
 name: Deploy organization website
 
 on:
@@ -119,3 +119,14 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify both live public website endpoints
+        run: python source/scripts/verify_live_release_years.py
+
+      - name: Save public HTTP verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-release-year-verification
+          path: live-verification/
+          retention-days: 14
