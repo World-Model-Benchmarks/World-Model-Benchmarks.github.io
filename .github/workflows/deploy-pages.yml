@@ -1,5 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
-# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@27a900061cbf8d3d49b84270e76dcd1fe9ef681c
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@a1f365a1ec93f886c68baf8622195bd70d2c3532
 name: Deploy organization website
 
 on:
@@ -37,13 +37,14 @@ jobs:
           path: source
           fetch-depth: 1
 
-      - name: Validate release-year alignment and website domain grouping
+      - name: Validate target-specific metrics, release years and website domains
         run: |
           python source/scripts/sync_latest_survey.py
           node --check source/docs/assets/app-v3-core.js
           node --check source/docs/assets/app-v3.js
           node source/scripts/test_website_domains.cjs
           node source/scripts/test_release_years.cjs
+          node source/scripts/test_target_scoped_metrics.cjs
 
       - name: Prepare organization-root mirror
         shell: bash
@@ -77,6 +78,8 @@ jobs:
               assert manifest["classificationFingerprint"] == metadata["classificationFingerprint"], "Classification fingerprints differ"
           if manifest.get("recordFingerprint") and metadata.get("recordFingerprint"):
               assert manifest["recordFingerprint"] == metadata["recordFingerprint"], "Record fingerprints differ"
+          assert manifest["evaluationTrackFingerprint"] == metadata["evaluationTrackFingerprint"], "Target-specific coding fingerprints differ"
+          assert manifest["categoryRecords"] == metadata["categoryRecords"], "Target-specific records differ"
 
           shard_items = []
           for index in range(1, 5):
@@ -127,6 +130,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: live-release-year-verification
+          name: live-metric-coding-verification
           path: live-verification/
           retention-days: 14
