@@ -1,5 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
-# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@7a83e608eef4639cc2074a8bb93e08444e9a5585
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@4b124d0326602274ecc1e451d3e20dd9e0ce331d
 name: Deploy organization website
 
 on:
@@ -80,11 +80,15 @@ jobs:
               assert manifest["recordFingerprint"] == metadata["recordFingerprint"], "Record fingerprints differ"
           assert manifest["evaluationTrackFingerprint"] == metadata["evaluationTrackFingerprint"], "Target-specific coding fingerprints differ"
           assert manifest["categoryRecords"] == metadata["categoryRecords"], "Target-specific records differ"
-          assert manifest.get("schemaVersion") == 11, "Final joint-coding schema is missing"
-          assert len(manifest.get("evaluationRecords", [])) == 372, "Joint display-combination total is stale"
+          assert manifest.get("schemaVersion") == 12, "Final joint-coding schema is missing"
+          assert metadata.get("schemaVersion") == 12, "Metadata schema is stale"
+          assert len(manifest.get("evaluationRecords", [])) == 369, "Joint display-combination total is stale"
           assert len(manifest.get("taskRecords", [])) == 403, "Task and auxiliary record total is stale"
           assert manifest.get("taskRecordCounts", {}).get("targetTasks") == 401, "Target-task total is stale"
           assert manifest.get("taskRecordCounts", {}).get("auxiliary") == 2, "Auxiliary-record total is stale"
+          assert manifest.get("taskRecordCounts", {}).get("classifiedData") == 401, "Classified-Data total is stale"
+          assert manifest.get("taskRecordCounts", {}).get("unresolvedData") == 0, "Unresolved-Data total is stale"
+          assert manifest.get("taskRecordCounts", {}).get("data") == {"RWD": 89, "SBG": 88, "SPTC": 71, "HCP": 153}, "Data totals are stale"
           assert records["CausalSpatial"][2] == "video", "CausalSpatial raw domain is stale"
           assert set(records["ContPhy"][7].split("+")) == {"S3", "S4"}, "ContPhy causal sub-targets are stale"
 
