@@ -1,5 +1,5 @@
 # Mirror the canonical project website at the organization-root URL.
-# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@a1f365a1ec93f886c68baf8622195bd70d2c3532
+# Canonical source refresh: World-Model-Benchmarks/World-Model-Benchmarks@7a83e608eef4639cc2074a8bb93e08444e9a5585
 name: Deploy organization website
 
 on:
@@ -37,7 +37,7 @@ jobs:
           path: source
           fetch-depth: 1
 
-      - name: Validate target-specific metrics, release years and website domains
+      - name: Validate joint task coding, release years and website domains
         run: |
           python source/scripts/sync_latest_survey.py
           node --check source/docs/assets/app-v3-core.js
@@ -80,6 +80,13 @@ jobs:
               assert manifest["recordFingerprint"] == metadata["recordFingerprint"], "Record fingerprints differ"
           assert manifest["evaluationTrackFingerprint"] == metadata["evaluationTrackFingerprint"], "Target-specific coding fingerprints differ"
           assert manifest["categoryRecords"] == metadata["categoryRecords"], "Target-specific records differ"
+          assert manifest.get("schemaVersion") == 11, "Final joint-coding schema is missing"
+          assert len(manifest.get("evaluationRecords", [])) == 372, "Joint display-combination total is stale"
+          assert len(manifest.get("taskRecords", [])) == 403, "Task and auxiliary record total is stale"
+          assert manifest.get("taskRecordCounts", {}).get("targetTasks") == 401, "Target-task total is stale"
+          assert manifest.get("taskRecordCounts", {}).get("auxiliary") == 2, "Auxiliary-record total is stale"
+          assert records["CausalSpatial"][2] == "video", "CausalSpatial raw domain is stale"
+          assert set(records["ContPhy"][7].split("+")) == {"S3", "S4"}, "ContPhy causal sub-targets are stale"
 
           shard_items = []
           for index in range(1, 5):
@@ -130,6 +137,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: live-metric-coding-verification
+          name: live-joint-coding-verification
           path: live-verification/
           retention-days: 14

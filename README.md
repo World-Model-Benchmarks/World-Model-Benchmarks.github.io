@@ -16,4 +16,4 @@ Edit the website source in the main survey repository:
 
 - `World-Model-Benchmarks/World-Model-Benchmarks/docs/`
 
-This publishing repository synchronizes automatically every hour. A deployment can also be started manually from **Actions → Deploy organization website → Run workflow**.
+This publishing repository synchronizes daily at 00:17 UTC. A deployment can also be started manually from **Actions → Deploy organization website → Run workflow**.
